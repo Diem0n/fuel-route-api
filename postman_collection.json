@@ -22,8 +22,8 @@
       "request": { "method": "GET", "url": "{{base_url}}/api/route/map/?start=New York, NY&finish=Los Angeles, CA" }
     },
     {
-      "name": "Error: outside USA",
-      "request": { "method": "GET", "url": "{{base_url}}/api/route/?start=London&finish=Denver, CO" }
+      "name": "Error: outside USA (London)",
+      "request": { "method": "GET", "url": "{{base_url}}/api/route/?start=51.5072,-0.1276&finish=Denver, CO" }
     }
   ]
 }
