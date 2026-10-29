@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.test import SimpleTestCase, TestCase
 
+from routing.management.commands.load_data import locate_exit
 from routing.models import FuelStation
 from routing.services import TripError, plan_fuel_stops
 
@@ -77,3 +78,14 @@ class RouteViewTests(TestCase):
 
     def test_outside_usa_is_400(self):
         self.assertEqual(self.client.get("/api/route/?start=51.5,-0.1&finish=40,-85").status_code, 400)
+
+
+class LocateExitTests(SimpleTestCase):
+    exits = {283: [(36.62, -95.15), (40.0, -80.0)]}
+
+    def test_picks_named_exit_nearest_the_town(self):
+        self.assertEqual(locate_exit("I-44, EXIT 283 & US-69", 36.6, -95.2, self.exits), (36.62, -95.15))
+
+    def test_no_exit_or_too_far_falls_back(self):
+        self.assertIsNone(locate_exit("US-87 & Dorsey Rd", 36.6, -95.2, self.exits))
+        self.assertIsNone(locate_exit("I-44, EXIT 283", 30.0, -100.0, self.exits))

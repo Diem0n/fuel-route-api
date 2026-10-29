@@ -20,6 +20,7 @@ class FuelStation(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=2)
     price = models.FloatField()
-    # Town centroid, not the exact truck stop: the CSV has no coordinates.
+    # The CSV has no coordinates: the exit named in the address when it can be found, else the town centre.
     lat = models.FloatField(db_index=True)
     lng = models.FloatField()
+    at_exit = models.BooleanField(default=False)

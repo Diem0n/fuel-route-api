@@ -51,15 +51,22 @@ Import `postman_collection.json` into Postman for ready-made requests.
 
 ## How it works
 
-1. **Station geocoding (offline, once).** The CSV has no coordinates. `load_data` matches each
-   station's city/state against the US Census places and county-subdivision gazetteers and stores
-   the station with that town's centroid. 97% of US rows match; Canadian rows are dropped. Duplicate
-   rows for the same truck stop keep the cheapest price.
+1. **Station geocoding (offline, once).** The CSV has no coordinates, so `load_data` places each
+   station in two steps:
+   - The city/state is matched against the US Census places and county-subdivision gazetteers.
+     97% of US rows match; Canadian rows are dropped.
+   - When the address names an exit (`I-44, EXIT 283 & US-69`), the station is moved to that exit,
+     using the exit nearest the town in `data/us_exits.tsv`. That file holds every US motorway exit
+     from OpenStreetMap. This puts 53% of stations at their exact exit. The rest stay at the town
+     centre.
+
+   Duplicate rows for the same truck stop keep the cheapest price.
 2. **Routing: one external call.** OSRM's public server (free, no API key) returns the full route
    geometry. `City, ST` and `lat,lng` inputs are geocoded locally, so a typical request makes exactly
    one external API call. Results are cached, so repeat requests return in about 1 ms.
 3. **Stations on the route.** The geometry is resampled to one point per mile, and numpy finds each
-   candidate station's nearest route point. Stations within 10 miles of the route get a mile marker.
+   candidate station's nearest route point. A station placed at its exit counts as on the route
+   within 2 miles, which keeps out exits on crossing highways. A town-centre station gets 10 miles.
 4. **Cheapest plan.** Standard greedy algorithm for refuelling on a fixed route: at each station, if a
    cheaper station is within range, buy just enough fuel to get there. If not, fill the tank and go
    to the cheapest station in range. Before planning, a station is dropped when a cheaper one is
@@ -68,7 +75,9 @@ Import `postman_collection.json` into Postman for ready-made requests.
 ## Assumptions and limits
 
 - The vehicle starts with a full tank. `total_fuel_cost` is the money spent at fuel stops.
-- Station positions use the town centroid, not the exact exit. Detour distance to the pump is ignored.
+- Stations without an exit number in their address are placed at the town centre, so their mile
+  marker is approximate. Stations at an exit are on the highway, so there is no detour to price in.
+- If two highways near a town share an exit number, the nearest one wins.
 - OSRM's demo server is rate-limited and has no SLA. Production would self-host OSRM or use a paid
   routing API.
 
@@ -77,3 +86,8 @@ Import `postman_collection.json` into Postman for ready-made requests.
 ```bash
 python manage.py test
 ```
+
+## Data credits
+
+Exit locations: © OpenStreetMap contributors, available under the
+[Open Database License](https://www.openstreetmap.org/copyright). Town centroids: US Census Bureau gazetteer files.

@@ -13,7 +13,10 @@ from routing.models import FuelStation, Place
 
 MAX_RANGE_MILES = 500
 MPG = 10
-CORRIDOR_MILES = 10  # stations whose town is within this distance of the route count as "on the route"
+# How far from the route a station may be and still count as "on the route". Exit-located stations sit on
+# the highway, so a tight corridor keeps out exits on crossing highways. Town-centre ones need slack.
+EXIT_CORRIDOR_MILES = 2
+CORRIDOR_MILES = 10
 CLUSTER_MILES = 25
 OSRM_URL = "https://router.project-osrm.org/route/v1/driving/{},{};{},{}?overview=full&geometries=geojson"
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search?"
@@ -102,7 +105,7 @@ def stations_along(marks, s_lat, s_lng):
         d2 = dx * dx + dy * dy
         nearest = d2.argmin(axis=1)
         for station, j, dist2 in zip(chunk, nearest, d2[np.arange(len(chunk)), nearest]):
-            if dist2 <= CORRIDOR_MILES**2:
+            if dist2 <= (EXIT_CORRIDOR_MILES if station.at_exit else CORRIDOR_MILES) ** 2:
                 found.append((float(marks[j]), station))
     found.sort(key=lambda x: (x[0], x[1].price))
     return found
