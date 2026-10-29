@@ -1,0 +1,29 @@
+{
+  "info": {
+    "name": "Fuel Route API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{ "key": "base_url", "value": "http://localhost:8000" }],
+  "item": [
+    {
+      "name": "New York -> Los Angeles",
+      "request": { "method": "GET", "url": "{{base_url}}/api/route/?start=New York, NY&finish=Los Angeles, CA" }
+    },
+    {
+      "name": "Chicago -> Denver",
+      "request": { "method": "GET", "url": "{{base_url}}/api/route/?start=Chicago, IL&finish=Denver, CO" }
+    },
+    {
+      "name": "Free-text address -> lat,lng",
+      "request": { "method": "GET", "url": "{{base_url}}/api/route/?start=Space Needle, Seattle&finish=25.7617,-80.1918" }
+    },
+    {
+      "name": "Map (HTML)",
+      "request": { "method": "GET", "url": "{{base_url}}/api/route/map/?start=New York, NY&finish=Los Angeles, CA" }
+    },
+    {
+      "name": "Error: outside USA",
+      "request": { "method": "GET", "url": "{{base_url}}/api/route/?start=London&finish=Denver, CO" }
+    }
+  ]
+}

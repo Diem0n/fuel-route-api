@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ trip.start.query }} → {{ trip.finish.query }}</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+  <style>
+    body { margin: 0; font: 14px system-ui, sans-serif; }
+    #map { height: 100vh; }
+    #summary { position: absolute; top: 10px; right: 10px; z-index: 1000; background: #fff; padding: 10px 14px;
+               border-radius: 6px; box-shadow: 0 1px 6px rgba(0,0,0,.3); max-width: 320px; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="summary">
+    <b>{{ trip.start.query }} → {{ trip.finish.query }}</b><br>
+    {{ trip.distance_miles }} mi · {{ trip.duration_hours }} h driving<br>
+    {{ trip.fuel_stops|length }} fuel stop{{ trip.fuel_stops|length|pluralize }} ·
+    {{ trip.total_gallons }} gal · <b>${{ trip.total_fuel_cost }}</b>
+  </div>
+  {{ trip|json_script:"trip" }}
+  <script>
+    const trip = JSON.parse(document.getElementById("trip").textContent);
+    const map = L.map("map");
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(map);
+    const line = L.geoJSON(trip.route, { style: { color: "#2563eb", weight: 5 } }).addTo(map);
+    map.fitBounds(line.getBounds(), { padding: [30, 30] });
+    L.marker([trip.start.lat, trip.start.lng]).addTo(map).bindPopup("Start: " + trip.start.query);
+    L.marker([trip.finish.lat, trip.finish.lng]).addTo(map).bindPopup("Finish: " + trip.finish.query);
+    const esc = (v) => String(v).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    for (const s of trip.fuel_stops) {
+      L.circleMarker([s.lat, s.lng], { radius: 8, color: "#b91c1c", fillColor: "#ef4444", fillOpacity: 0.9 })
+        .addTo(map)
+        .bindPopup(`<b>${esc(s.name)}</b><br>${esc(s.address)}, ${esc(s.city)}, ${s.state}<br>Mile ${s.mile}<br>` +
+                   `${s.gallons} gal @ $${s.price_per_gallon} = <b>$${s.cost}</b>`);
+    }
+  </script>
+</body>
+</html>

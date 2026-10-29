@@ -1,0 +1,17 @@
+[project]
+name = "fuel-route-api"
+version = "0.1.0"
+description = "Django API for the cheapest fuel stops along a US driving route"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.1.2",
+    "numpy>=2.5.4",
+]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["routing/migrations"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+ignore = ["RUF012"]  # Django Meta attributes
